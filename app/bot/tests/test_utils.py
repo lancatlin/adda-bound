@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from bot.utils import get_token
+from bot.utils import get_token, get_recipient
 
 
 class UtilsTest(TestCase):
@@ -17,3 +17,11 @@ class UtilsTest(TestCase):
     def test_get_token_multiple(self):
         s = '/join 12345 67890'
         self.assertRaises(ValueError, lambda: get_token(s))
+
+    def test_get_recipient_success(self):
+        s = '/send Annie some message'
+        self.assertEqual(get_recipient(s), 'Annie')
+
+    def test_get_recipient_failed(self):
+        s = '/send'
+        self.assertRaises(ValueError, lambda: get_recipient(s))
