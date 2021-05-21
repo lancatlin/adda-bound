@@ -7,6 +7,8 @@ from linebot.models import (
 
 from core.models import Room, Pairing
 
+from bot.utils import get_token
+
 line_bot_api = LineBotApi(settings.LINE_TOKEN)
 handler = WebhookHandler(settings.LINE_SECRET)
 
@@ -37,7 +39,7 @@ def handle(event):
         return create_pairing(event)
 
     if msg.startswith('/join'):
-        return reply_text(event, 'join a pairing')
+        return join_pairing(event)
 
     if msg.startswith('/manage'):
         return reply_text(event, 'manage the pairings')
@@ -83,11 +85,30 @@ def create_pairing(event, room):
     reply_text(event, f'create new pairing {pairing.token}')
 
 
+@with_room
+def join_pairing(event, room):
+    print(room.name)
+    try:
+        token = get_token(event.message.text)
+        pairing = Pairing.objects.get(token=token)
+        pair_with = pairing.room
+        room.rooms.add(pair_with)
+        print(room.rooms.all())
+        pairing.delete()
+        reply_text(event, f'Success connected with {pair_with.name}.')
+
+    except ValueError:
+        reply_text(event, 'Cannot identify token from you command.')
+
+    except Pairing.DoesNotExist:
+        reply_text(event, 'Pairing not found.')
+
+
 def get_user_name(user_id):
     try:
         res = line_bot_api.get_profile(user_id)
         return res.display_name
-    except Exception as e:
+    except Exception:
         return 'NoNameUser'
 
 
@@ -95,7 +116,7 @@ def get_group_name(group_id):
     try:
         res = line_bot_api.get_group_summary(group_id)
         return res.group_name
-    except Exception as e:
+    except Exception:
         return 'NoNameGroup'
 
 

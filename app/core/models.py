@@ -24,6 +24,9 @@ class Room(models.Model):
     name = models.CharField(max_length=255)
     rooms = models.ManyToManyField('self', symmetrical=True)
 
+    def __str__(self):
+        return self.name
+
 
 def random_token():
     while True:
@@ -38,3 +41,6 @@ class Pairing(models.Model):
     )
     token = models.IntegerField(default=random_token)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.room.name} - {self.token}'
