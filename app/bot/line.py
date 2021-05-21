@@ -1,7 +1,7 @@
 from django.conf import settings
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, FollowEvent, JoinEvent, TextSendMessage
+    MessageEvent, TextMessage, TextSendMessage, FollowEvent, JoinEvent
 )
 
 from core.models import Room, Pairing
@@ -121,8 +121,8 @@ def send(event, room):
     msg = event.message.text
     try:
         recipient_name, message = parse_message(msg)
-        recipient = Room.objects.get(name__icontains=recipient_name)
-        push_message(recipient, message)
+        recipient = room.rooms.get(name__icontains=recipient_name)
+        push_message(recipient, f'from {room.name}: {message}')
         reply_text(event, f'Sent {recipient.name} "{message}"')
     except ValueError:
         reply_text(event, 'Cannot parse the message')

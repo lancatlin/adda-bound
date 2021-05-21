@@ -28,7 +28,8 @@ class LineBotTest(TestCase):
         event = MessageEvent(source=room_source(
             self.room1), message=TextMessage(text=msg))
         send(event)
-        mock_push.assert_called_once_with(self.room2, 'This is my message')
+        mock_push.assert_called_once_with(
+            self.room2, f'from {self.room1.name}: This is my message')
         mock_reply.assert_called_once_with(
             event, f'Sent {self.room2.name} "This is my message"')
 
