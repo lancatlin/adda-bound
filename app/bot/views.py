@@ -12,7 +12,7 @@ from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage, FollowEvent, JoinEvent
 )
 
-from core.models import Room
+from core.models import Room, Pairing
 
 
 line_bot_api = LineBotApi(settings.LINE_TOKEN)
@@ -31,11 +31,47 @@ def line_endpoint(request):
 
 
 @handler.add(MessageEvent, message=TextMessage)
-def echo(event):
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=event.message.text)
-    )
+def handle(event):
+    msg = event.message.text
+    if msg.startswith('/create'):
+        return create_pairing(event)
+
+    if msg.startswith('/join'):
+        return reply_text(event, 'join a pairing')
+
+    if msg.startswith('/manage'):
+        return reply_text(event, 'manage the pairings')
+
+    if msg.startswith('/delete'):
+        return reply_text(event, 'delete my information')
+
+    reply_text(event, msg)
+
+
+def with_room(callback):
+    def func(event):
+        src = event.source
+        if src.type == 'user':
+            room = Room.objects.get(
+                room_id=src.user_id,
+                room_type=Room.RoomType.USER,
+            )
+
+        elif src.type == 'group':
+            room = Room.objects.get(
+                room_id=src.group_id,
+                room_type=Room.RoomType.GROUP,
+            )
+
+        callback(event, room)
+    return func
+
+
+@with_room
+def create_pairing(event, room):
+    print(room.name)
+    pairing = Pairing.objects.create(room=room)
+    reply_text(event, f'create new pairing {pairing.token}')
 
 
 def get_user_name(user_id):
@@ -95,7 +131,7 @@ def join_group(event):
     src = event.source
     room, created = Room.objects.get_or_create(
         room_id=src.group_id,
-        room_type=Room.RoomType.Group,
+        room_type=Room.RoomType.GROUP,
         defaults={'service': Room.Service.LINE,
                   'name': get_group_name(src.group_id)},
     )

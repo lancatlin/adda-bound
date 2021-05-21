@@ -15,8 +15,8 @@ class Room(models.Model):
 
     class RoomType(models.TextChoices):
         USER = 'U', _('User')
-        Group = 'G', _('Group')
-        Room = 'R', _('Room')
+        GROUP = 'G', _('Group')
+        ROOM = 'R', _('Room')
 
     room_id = models.CharField(max_length=255)
     room_type = models.CharField(choices=RoomType.choices, max_length=1)
@@ -28,7 +28,7 @@ class Room(models.Model):
 def random_token():
     while True:
         token = random.randrange(100000, 1000000)
-        if not Room.objects.filter(token=token).exists():
+        if not Pairing.objects.filter(token=token).exists():
             return token
 
 
@@ -36,5 +36,5 @@ class Pairing(models.Model):
     room = models.ForeignKey(
         Room, on_delete=models.CASCADE, related_name='pairings',
     )
-    token = models.IntegerField(auto_created=random_token)
+    token = models.IntegerField(default=random_token)
     created_at = models.DateTimeField(auto_now_add=True)
