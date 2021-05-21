@@ -42,7 +42,7 @@ def handle(event):
         return join_pairing(event)
 
     if msg.startswith('/manage'):
-        return reply_text(event, 'manage the pairings')
+        return manage(event)
 
     if msg.startswith('/delete'):
         return reply_text(event, 'delete my information')
@@ -102,6 +102,16 @@ def join_pairing(event, room):
 
     except Pairing.DoesNotExist:
         reply_text(event, 'Pairing not found.')
+
+
+@with_room
+def manage(event, room):
+    msg = event.message.text
+    if msg == '/manage list':
+        rooms_name = [
+            room.name for room in room.rooms.all()
+        ]
+        reply_text(event, '\n'.join(rooms_name))
 
 
 def get_user_name(user_id):
