@@ -1,13 +1,12 @@
 from django.conf import settings
 from linebot import LineBotApi, WebhookHandler
-from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, FollowEvent, JoinEvent
+    MessageEvent, TextMessage, TextSendMessage, FollowEvent, JoinEvent, TextSendMessage
 )
 
 from core.models import Room, Pairing
 
-from bot.utils import get_token
+from bot.utils import get_token, parse_message
 
 line_bot_api = LineBotApi(settings.LINE_TOKEN)
 handler = WebhookHandler(settings.LINE_SECRET)
@@ -40,6 +39,9 @@ def handle(event):
 
     if msg.startswith('/join'):
         return join_pairing(event)
+
+    if msg.startswith('/send'):
+        return send(event)
 
     if msg.startswith('/manage'):
         return manage(event)
@@ -112,6 +114,27 @@ def manage(event, room):
             room.name for room in room.rooms.all()
         ]
         reply_text(event, '\n'.join(rooms_name))
+
+
+@with_room
+def send(event, room):
+    msg = event.message.text
+    try:
+        recipient_name, message = parse_message(msg)
+        recipient = Room.objects.get(name__icontains=recipient_name)
+        push_message(recipient, message)
+        reply_text(event, f'Sent {recipient.name} "{message}"')
+    except ValueError:
+        reply_text(event, 'Cannot parse the message')
+    except Room.DoesNotExist:
+        reply_text(event, 'Recipient not found')
+
+
+def push_message(room, msg):
+    line_bot_api.push_message(
+        room.room_id,
+        TextSendMessage(text=msg)
+    )
 
 
 def get_user_name(user_id):

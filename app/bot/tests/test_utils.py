@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from bot.utils import get_token, get_recipient
+from bot.utils import get_token, parse_message
 
 
 class UtilsTest(TestCase):
@@ -20,8 +20,8 @@ class UtilsTest(TestCase):
 
     def test_get_recipient_success(self):
         s = '/send Annie some message'
-        self.assertEqual(get_recipient(s), 'Annie')
+        self.assertEqual(parse_message(s), ('Annie', 'some message'))
 
     def test_get_recipient_failed(self):
         s = '/send'
-        self.assertRaises(ValueError, lambda: get_recipient(s))
+        self.assertRaises(ValueError, lambda: parse_message(s))

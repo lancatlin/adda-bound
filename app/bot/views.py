@@ -1,11 +1,6 @@
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-
-from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, FollowEvent, JoinEvent
-)
-
 from bot.line import handler
 
 

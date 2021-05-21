@@ -8,8 +8,8 @@ def get_token(msg):
     return int(matches[0])
 
 
-def get_recipient(msg):
+def parse_message(msg):
     pieces = msg.split(' ')
     if len(pieces) < 2:
         raise ValueError('Cannot split recipient from message')
-    return pieces[1]
+    return pieces[1], ' '.join(pieces[2:])
