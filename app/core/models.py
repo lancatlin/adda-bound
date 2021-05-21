@@ -1,3 +1,5 @@
+import random
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -21,3 +23,18 @@ class Room(models.Model):
     service = models.CharField(choices=Service.choices, max_length=2)
     name = models.CharField(max_length=255)
     rooms = models.ManyToManyField('self', symmetrical=True)
+
+
+def random_token():
+    while True:
+        token = random.randrange(100000, 1000000)
+        if not Room.objects.filter(token=token).exists():
+            return token
+
+
+class Pairing(models.Model):
+    room = models.ForeignKey(
+        Room, on_delete=models.CASCADE, related_name='pairings',
+    )
+    token = models.IntegerField(auto_created=random_token)
+    created_at = models.DateTimeField(auto_now_add=True)
