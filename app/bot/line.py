@@ -88,9 +88,17 @@ def join_group(event):
 
 
 @handler.add(PostbackEvent)
+def postback_handler(event, *args):
+    msg = event.postback.data
+    if msg.startswith('/confirm'):
+        return confirm_message(event)
+
+    if msg.startswith('/del'):
+        del_message(event)
+
+
 @with_room
-def postback_confirm(event, room, *args):
-    print(message_queue)
+def confirm_message(event, room):
     msg = event.postback.data
     try:
         msg_id = msg.split(' ')[1]
@@ -110,8 +118,21 @@ def postback_confirm(event, room, *args):
         del message_queue[msg_id]
 
     except Exception as e:
-        print(e)
-        reply_text(event, 'Message not found')
+        reply_text(event, str(e))
+
+
+@with_room
+def del_message(event, room):
+    msg = event.postback.data
+    try:
+        msg_id = msg.split(' ')[1]
+        if msg_id in message_queue:
+            del message_queue[msg_id]
+            reply_text(event, 'Canceled')
+        else:
+            reply_text(event, 'Message not exists or already canceled')
+    except Exception as e:
+        reply_text(event, str(e))
 
 
 @with_room
