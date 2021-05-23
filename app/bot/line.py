@@ -128,8 +128,7 @@ def send(event, room):
     try:
         recipient_name, message = parse_message(msg)
         recipient = room.rooms.get(name__icontains=recipient_name)
-        push_message(recipient, f'from {room.name}: {message}')
-        reply_text(event, f'Sent {recipient.name} "{message}"')
+        confirm(event, recipient, message)
     except ValueError:
         reply_text(event, 'Cannot parse the message')
     except Room.DoesNotExist:
