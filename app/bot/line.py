@@ -1,8 +1,12 @@
+import uuid
+
 from django.conf import settings
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage, FollowEvent, JoinEvent
 )
+from linebot.models.template import ConfirmTemplate
+from linebot.models.actions import PostbackAction
 
 from core.models import Room, Pairing
 
@@ -10,6 +14,8 @@ from bot.utils import get_token, parse_message
 
 line_bot_api = LineBotApi(settings.LINE_TOKEN)
 handler = WebhookHandler(settings.LINE_SECRET)
+
+message_queue = {}
 
 
 def with_room(callback):
@@ -157,6 +163,28 @@ def reply_text(event, message):
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=message)
+    )
+
+
+def confirm(event, recipient, message):
+    '''Ask user to comfirm the message being sent'''
+    id = uuid.uuid4()
+    message_queue[id] = {
+        'recipient': recipient,
+        'message': message,
+    }
+    line_bot_api.reply_message(
+        reply_token=event.reply_token,
+        message=ConfirmTemplate(
+            text=f'Send {recipient.name} "{message}" ?',
+            actions=[
+                PostbackAction(
+                    label='Yes',
+                    data=f'/confirm {id}',
+                    display_text='Yes'
+                )
+            ]
+        )
     )
 
 

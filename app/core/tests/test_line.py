@@ -8,7 +8,7 @@ from linebot.models.messages import TextMessage
 
 from core.tests.test_models import sample_room
 
-from bot.line import send
+from bot.line import send, confirm, message_queue
 
 
 def room_source(room):
@@ -42,3 +42,19 @@ class LineBotTest(TestCase):
         send(event)
         mock_push.assert_not_called()
         mock_reply.assert_called()
+
+    @patch('uuid.uuid4')
+    @patch('bot.line.line_bot_api.reply_message')
+    def test_confirm(self, mock_reply, mock_uuid):
+        uuid = '123456'
+        mock_uuid.return_value = uuid
+        event = MessageEvent(source=room_source(self.room1))
+        msg = 'This is my message'
+        confirm(event, self.room2, msg)
+        mock_reply.assert_called_once()
+        mock_uuid.assert_called_once()
+        self.assertIn(uuid, message_queue)
+        self.assertEqual(message_queue[uuid], {
+            'recipient': self.room2,
+            'message': msg,
+        })
