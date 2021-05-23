@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "/usr/bin/python3",
+    "python.pythonPath": "/home/wancat/.anaconda3/bin/python",
     "editor.defaultFormatter": "ms-python.python",
     "editor.formatOnSave": true,
     "python.linting.pylintArgs": [
