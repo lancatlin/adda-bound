@@ -2,10 +2,11 @@ import uuid
 
 from django.conf import settings
 from linebot import LineBotApi, WebhookHandler
-from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, FollowEvent, JoinEvent
-)
-from linebot.models.template import ConfirmTemplate
+from linebot.models.messages import TextMessage
+from linebot.models.events import (
+    MessageEvent, FollowEvent, JoinEvent, PostbackEvent)
+from linebot.models.send_messages import TextSendMessage
+from linebot.models.template import ConfirmTemplate, TemplateSendMessage
 from linebot.models.actions import PostbackAction
 
 from core.models import Room, Pairing
@@ -19,7 +20,7 @@ message_queue = {}
 
 
 def with_room(callback):
-    def func(event):
+    def func(event, *args):
         src = event.source
         if src.type == 'user':
             room = Room.objects.get(
@@ -33,7 +34,7 @@ def with_room(callback):
                 room_type=Room.RoomType.GROUP,
             )
 
-        callback(event, room)
+        callback(event, room, *args)
     return func
 
 
@@ -84,6 +85,33 @@ def join_group(event):
                   'name': get_group_name(src.group_id)},
     )
     greeting(event, room, created)
+
+
+@handler.add(PostbackEvent)
+@with_room
+def postback_confirm(event, room, *args):
+    print(message_queue)
+    msg = event.postback.data
+    try:
+        msg_id = msg.split(' ')[1]
+        print(msg_id)
+        if msg_id not in message_queue:
+            raise Exception('Message not found')
+
+        msg = message_queue[msg_id]
+        sender = msg['sender']
+        recipient = msg['recipient']
+        message = msg['message']
+        push_message(
+            recipient,
+            f'from {sender.name}: {message}'
+        )
+        reply_text(event, 'Sent')
+        del message_queue[msg_id]
+
+    except Exception as e:
+        print(e)
+        reply_text(event, 'Message not found')
 
 
 @with_room
@@ -165,26 +193,37 @@ def reply_text(event, message):
     )
 
 
-def confirm(event, recipient, message):
+@with_room
+def confirm(event, room, recipient, message):
     '''Ask user to comfirm the message being sent'''
-    id = uuid.uuid4()
-    message_queue[id] = {
+    msg_id = str(uuid.uuid4())
+    message_queue[msg_id] = {
+        'sender': room,
         'recipient': recipient,
         'message': message,
     }
     line_bot_api.reply_message(
-        reply_token=event.reply_token,
-        message=ConfirmTemplate(
-            text=f'Send {recipient.name} "{message}" ?',
-            actions=[
-                PostbackAction(
-                    label='Yes',
-                    data=f'/confirm {id}',
-                    display_text='Yes'
-                )
-            ]
+        event.reply_token,
+        TemplateSendMessage(
+            alt_text='Confirm',
+            template=ConfirmTemplate(
+                text=f'Send {recipient.name} "{message}" ?',
+                actions=[
+                    PostbackAction(
+                        label='Yes',
+                        data=f'/confirm {msg_id}',
+                        display_text='Yes'
+                    ),
+                    PostbackAction(
+                        label='No',
+                        data=f'/del {msg_id}',
+                        display_text='No'
+                    )
+                ]
+            )
         )
     )
+    print(message_queue)
 
 
 def greeting(event, room, created):

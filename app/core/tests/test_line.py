@@ -2,13 +2,13 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from linebot.models.events import MessageEvent
+from linebot.models.events import MessageEvent, PostbackEvent, Postback
 from linebot.models.sources import SourceUser
 from linebot.models.messages import TextMessage
 
 from core.tests.test_models import sample_room
 
-from bot.line import send, confirm, message_queue
+from bot.line import send, confirm, message_queue, postback_confirm
 
 
 def room_source(room):
@@ -33,6 +33,7 @@ class LineBotTest(TestCase):
         mock_uuid.assert_called_once()
         self.assertIn(uuid, message_queue)
         self.assertEqual(message_queue[uuid], {
+            'sender': self.room1,
             'recipient': self.room2,
             'message': msg,
         })
@@ -52,4 +53,32 @@ class LineBotTest(TestCase):
         event = MessageEvent(source=room_source(
             self.room1), message=TextMessage(text=msg))
         send(event)
-        mock_reply.assert_called()
+        mock_reply.assert_called_once_with(
+            event, 'Recipient not found'
+        )
+
+    @patch('bot.line.reply_text')
+    @patch('bot.line.push_message')
+    def test_handle_user_confirm(self, mock_push, mock_reply):
+        msg_id = '123456'
+        message_queue[msg_id] = {
+            'sender': self.room1,
+            'recipient': self.room2,
+            'message': 'Hi, how are you?',
+        }
+        event = PostbackEvent(
+            source=room_source(self.room1),
+            postback=Postback(
+                data=f'/confirm {msg_id}'
+            )
+        )
+        postback_confirm(event)
+
+        mock_push.assert_called_once_with(
+            self.room2,
+            f'from {self.room1.name}: Hi, how are you?',
+        )
+        mock_reply.assert_called_once_with(
+            event, 'Sent',
+        )
+        self.assertNotIn(msg_id, message_queue)
