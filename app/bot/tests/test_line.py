@@ -8,7 +8,7 @@ from linebot.models.messages import TextMessage
 
 from core.tests.test_models import sample_room
 
-from bot.line import send, confirm, message_queue, confirm_message
+from bot.send import send, confirm, message_queue, confirm_message
 
 
 def room_source(room):
@@ -38,7 +38,7 @@ class LineBotTest(TestCase):
             'message': msg,
         })
 
-    @patch('bot.line.confirm')
+    @patch('bot.send.confirm')
     def test_send_success(self, mock_confirm):
         msg = f'/send {self.room2.name} This is my message'
         event = MessageEvent(source=room_source(
@@ -47,7 +47,7 @@ class LineBotTest(TestCase):
         mock_confirm.assert_called_once_with(
             event, self.room2, 'This is my message')
 
-    @patch('bot.line.reply_text')
+    @patch('bot.send.reply_text')
     def test_send_not_found_recipient(self, mock_reply):
         msg = '/send Derek This is my message'
         event = MessageEvent(source=room_source(
@@ -57,8 +57,8 @@ class LineBotTest(TestCase):
             event, 'Recipient not found'
         )
 
-    @patch('bot.line.reply_text')
-    @patch('bot.line.push_message')
+    @patch('bot.send.reply_text')
+    @patch('bot.send.push_message')
     def test_handle_user_confirm(self, mock_push, mock_reply):
         msg_id = '123456'
         message_queue[msg_id] = {
@@ -78,7 +78,5 @@ class LineBotTest(TestCase):
             self.room2,
             f'from {self.room1.name}: Hi, how are you?',
         )
-        mock_reply.assert_called_once_with(
-            event, 'Sent',
-        )
+        mock_reply.assert_called_once_with(event, 'Sent')
         self.assertNotIn(msg_id, message_queue)

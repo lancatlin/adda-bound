@@ -1,4 +1,5 @@
 import re
+from core.models import Room
 
 
 def get_token(msg):
@@ -13,3 +14,22 @@ def parse_message(msg):
     if len(pieces) < 2:
         raise ValueError('Cannot split recipient from message')
     return pieces[1], ' '.join(pieces[2:])
+
+
+def with_room(callback):
+    def func(event, *args):
+        src = event.source
+        if src.type == 'user':
+            room = Room.objects.get(
+                room_id=src.user_id,
+                room_type=Room.RoomType.USER,
+            )
+
+        elif src.type == 'group':
+            room = Room.objects.get(
+                room_id=src.group_id,
+                room_type=Room.RoomType.GROUP,
+            )
+
+        callback(event, room, *args)
+    return func

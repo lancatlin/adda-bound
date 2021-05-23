@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from bot.line import handler
+from bot.handler import handler
 
 
 @csrf_exempt
