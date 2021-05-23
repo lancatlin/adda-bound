@@ -33,8 +33,6 @@ def handle(event):
     if msg.startswith('/delete'):
         return reply_text(event, 'delete my information')
 
-    reply_text(event, msg)
-
 
 @handler.add(PostbackEvent)
 def postback_handler(event, *args):
