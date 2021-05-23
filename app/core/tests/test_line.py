@@ -8,7 +8,7 @@ from linebot.models.messages import TextMessage
 
 from core.tests.test_models import sample_room
 
-from bot.line import send, confirm, message_queue, postback_confirm
+from bot.line import send, confirm, message_queue, confirm_message
 
 
 def room_source(room):
@@ -72,7 +72,7 @@ class LineBotTest(TestCase):
                 data=f'/confirm {msg_id}'
             )
         )
-        postback_confirm(event)
+        confirm_message(event)
 
         mock_push.assert_called_once_with(
             self.room2,
