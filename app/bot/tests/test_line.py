@@ -31,8 +31,8 @@ class LineBotTest(TestCase):
         confirm(event, self.room2, msg)
         mock_reply.assert_called_once()
         mock_uuid.assert_called_once()
-        self.assertIn(uuid, message_queue)
-        self.assertEqual(message_queue[uuid], {
+        self.assertTrue(message_queue.contain(uuid))
+        self.assertEqual(message_queue.get(uuid), {
             'sender': self.room1,
             'recipient': self.room2,
             'message': msg,
@@ -61,11 +61,11 @@ class LineBotTest(TestCase):
     @patch('bot.send.push_message')
     def test_handle_user_confirm(self, mock_push, mock_reply):
         msg_id = '123456'
-        message_queue[msg_id] = {
+        message_queue.set(msg_id, {
             'sender': self.room1,
             'recipient': self.room2,
             'message': 'Hi, how are you?',
-        }
+        })
         event = PostbackEvent(
             source=room_source(self.room1),
             postback=Postback(
@@ -79,4 +79,4 @@ class LineBotTest(TestCase):
             f'from {self.room1.name}: Hi, how are you?',
         )
         mock_reply.assert_called_once_with(event, 'Sent')
-        self.assertNotIn(msg_id, message_queue)
+        self.assertFalse(message_queue.contain(msg_id))
