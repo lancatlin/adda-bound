@@ -5,17 +5,17 @@ from linebot .models.send_messages import TextSendMessage
 line_bot_api = LineBotApi(settings.LINE_TOKEN)
 
 
-def reply_text(event, message):
+def reply_text(event, *messages):
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text=message)
+        [TextSendMessage(text=message) for message in messages],
     )
 
 
-def push_message(room, msg):
+def push_message(room, *messages):
     line_bot_api.push_message(
         room.room_id,
-        TextSendMessage(text=msg)
+        [TextSendMessage(text=msg) for msg in messages],
     )
 
 

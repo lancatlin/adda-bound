@@ -10,9 +10,10 @@ def create_pairing(event, room):
     pairing = Pairing.objects.create(room=room)
     reply_text(
         event,
-        'Please copy the following message,\
-and ask your recipient to send it to AddaBound.')
-    push_message(room, f'/join {pairing.token}')
+        'Please copy the following message, \
+and ask your recipient to send it to AddaBound.',
+        f'/join {pairing.token}'
+    )
 
 
 @with_room
