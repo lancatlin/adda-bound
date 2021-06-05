@@ -1,4 +1,5 @@
 import re
+from .line import get_user_name, get_group_name
 from core.models import Room
 
 
@@ -20,16 +21,21 @@ def with_room(callback):
     def func(event, *args):
         src = event.source
         if src.type == 'user':
-            room = Room.objects.get(
-                room_id=src.user_id,
-                room_type=Room.RoomType.USER,
-            )
+            room_id = src.user_id
+            room_type = Room.RoomType.USER
+            name = get_user_name(src.user_id)
 
         elif src.type == 'group':
-            room = Room.objects.get(
-                room_id=src.group_id,
-                room_type=Room.RoomType.GROUP,
-            )
+            room_id = src.group_id
+            room_type = Room.RoomType.GROUP
+            name = get_group_name(src.group_id)
 
-        callback(event, room, *args)
+        room, created = Room.objects.get_or_create(
+            room_id=room_id,
+            room_type=room_type,
+            service=Room.Service.LINE,
+            defaults={'name': name},
+        )
+
+        return callback(event, room, *args)
     return func
