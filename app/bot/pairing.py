@@ -26,6 +26,7 @@ def join_pairing(event, room):
         print(room.rooms.all())
         pairing.delete()
         reply_text(event, f'Success connected with {pair_with.name}.')
+        push_message(pair_with, f'Success connected with {room.name}.')
 
     except ValueError:
         reply_text(event, 'Cannot identify token from you command.')
