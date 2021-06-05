@@ -1,6 +1,6 @@
 from core.models import Pairing
 
-from .line import reply_text
+from .line import reply_text, push_message
 from .utils import with_room, get_token
 
 
@@ -8,7 +8,11 @@ from .utils import with_room, get_token
 def create_pairing(event, room):
     print(room.name)
     pairing = Pairing.objects.create(room=room)
-    reply_text(event, f'create new pairing {pairing.token}')
+    reply_text(
+        event,
+        'Please copy the following message,\
+and ask your recipient to send it to AddaBound.')
+    push_message(room, f'/join {pairing.token}')
 
 
 @with_room

@@ -66,7 +66,7 @@ class LineBotTest(TestCase):
             self.room1), message=TextMessage(text=msg))
         send(event)
         mock_reply.assert_called_once_with(
-            event, f'Found multiple recipients: CyberPunk, CyberSpace'
+            event, 'Found multiple recipients: CyberPunk, CyberSpace'
         )
 
     @patch('bot.send.reply_text')
