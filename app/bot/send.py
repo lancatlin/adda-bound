@@ -56,6 +56,10 @@ def send(event, room):
         reply_text(event, 'Cannot parse the message')
     except Room.DoesNotExist:
         reply_text(event, 'Recipient not found')
+    except Room.MultipleObjectsReturned:
+        rooms = Room.objects.filter(name__icontains=recipient_name).all()
+        rooms_name = ', '.join([room.name for room in rooms])
+        reply_text(event, f'Found multiple recipients: {rooms_name}')
 
 
 @with_room

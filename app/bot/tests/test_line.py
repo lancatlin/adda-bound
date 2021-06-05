@@ -17,9 +17,10 @@ def room_source(room):
 
 class LineBotTest(TestCase):
     def setUp(self):
-        self.room1 = sample_room(name='CyberPunk', room_id='123456')
-        self.room2 = sample_room(name='Cambridge', room_id='345678')
-        self.room1.rooms.add(self.room2)
+        self.room1 = sample_room(name='Cambridge', room_id='123456')
+        self.room2 = sample_room(name='CyberPunk', room_id='345678')
+        self.room3 = sample_room(name='CyberSpace', id='74747474')
+        self.room1.rooms.add(self.room2, self.room3)
 
     @patch('uuid.uuid4')
     @patch('bot.line.line_bot_api.reply_message')
@@ -55,6 +56,17 @@ class LineBotTest(TestCase):
         send(event)
         mock_reply.assert_called_once_with(
             event, 'Recipient not found'
+        )
+
+    @patch('bot.send.reply_text')
+    def test_send_found_multiple_recipients(self, mock_reply):
+        '''Test found multiple recipients and should failed'''
+        msg = '/send Cyber This is my message'
+        event = MessageEvent(source=room_source(
+            self.room1), message=TextMessage(text=msg))
+        send(event)
+        mock_reply.assert_called_once_with(
+            event, f'Found multiple recipients: CyberPunk, CyberSpace'
         )
 
     @patch('bot.send.reply_text')
