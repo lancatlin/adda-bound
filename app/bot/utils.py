@@ -29,11 +29,6 @@ def get_or_create_room(event):
         room_type = Room.RoomType.GROUP
         name = get_group_name(src.group_id)
 
-    # room = Room.objects.get(
-    #     room_id=room_id,
-    #     room_type=room_type,
-    #     service=Room.Service.LINE,
-    # )
     room, created = Room.objects.get_or_create(
         room_id=room_id,
         defaults={

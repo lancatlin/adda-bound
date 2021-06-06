@@ -16,8 +16,8 @@ class Sender:
         self.room = get_or_create_room(event)
         self.request = event.message.text.strip()
 
-    def reply(self, msg):
-        reply_text(self.event, msg)
+    def reply(self, *msg):
+        reply_text(self.event, *msg)
 
     def handle(self):
         try:
@@ -27,22 +27,22 @@ class Sender:
                 self.send()
         except ValueError:
             '''Parse error'''
-            self.reply('Cannot parse the message')
+            self.reply('無法解析訊息')
 
         except Room.DoesNotExist:
             '''Room not found'''
-            self.reply('Recipient not found')
+            self.reply('找不到收件者，取消操作')
 
         except Room.MultipleObjectsReturned:
             '''Found multiple rooms'''
             rooms = self.room.rooms.filter(
                 name__icontains=self.recipient_name).all()
-            rooms_name = ', '.join([room.name for room in rooms])
-            self.reply(f'Found multiple recipients: {rooms_name}')
+            rooms_name = '、'.join([room.name for room in rooms])
+            self.reply(f'找到多位收件者：{rooms_name}，請重新操作')
 
         except queue.Empty:
             '''Timeout'''
-            push_message(self.room, 'Timeout, cancel')
+            push_message(self.room, '操作逾時，取消操作')
 
     def send(self):
         self.recipient_name, self.content = parse_message(self.request)
@@ -50,19 +50,20 @@ class Sender:
             name__icontains=self.recipient_name)
         self.confirm()
 
-    def ask(self, question):
-        self.reply(question)
+    def ask(self, *question):
+        self.reply(*question)
         self.event = MessageQueue.request(self.room)
         return self.event.message.text
 
     def send_conversation(self):
-        self.recipient_name = self.ask('Recipient\'s name?')
 
+        self.recipient_name = self.ask('收件者名稱？')
         print(self.recipient_name)
         self.recipient = self.room.rooms.get(
             name__icontains=self.recipient_name)
 
-        self.content = self.ask('Message?')
+        self.content = self.ask(
+            f'收件人：{self.recipient.name}', '請輸入訊息內容')
 
         self.confirm()
 
@@ -73,14 +74,14 @@ class Sender:
             TemplateSendMessage(
                 alt_text='Confirm',
                 template=ConfirmTemplate(
-                    text=f'Send {self.recipient.name} "{self.content}" ?',
+                    text=f'是否要發送「{self.content}」給{self.recipient.name}？',
                     actions=[
                         MessageAction(
-                            label='Yes',
+                            label='是',
                             text='Yes'
                         ),
                         MessageAction(
-                            label='No',
+                            label='取消',
                             text='No'
                         )
                     ]
@@ -89,8 +90,11 @@ class Sender:
         )
         res = MessageQueue.request(self.room)
         if res.message.text == 'Yes':
-            push_message(self.recipient,
-                         f'From {self.room.name}: {self.content}')
-            reply_text(res, 'Sent')
+            push_message(
+                self.recipient,
+                f'來自{self.room.name}的訊息：',
+                self.content
+            )
+            reply_text(res, '已傳送')
         else:
-            reply_text(res, 'Cancel')
+            reply_text(res, '取消')

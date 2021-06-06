@@ -40,7 +40,7 @@ def greeting(event, room):
     '''Greeting when join
     created is whether has created a new room
     '''
-    reply_text(event, f'Hello {room.name}! Thanks for using AddaBound')
+    reply_text(event, f'哈囉 {room.name}！謝謝你使用 AddaBound')
 
 
 @handler.add(FollowEvent)

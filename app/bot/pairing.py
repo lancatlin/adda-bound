@@ -10,8 +10,7 @@ def create_pairing(event, room):
     pairing = Pairing.objects.create(room=room)
     reply_text(
         event,
-        'Please copy the following message, \
-and ask your recipient to send it to AddaBound.',
+        '請複製下方訊息，請你欲連線者傳送此訊息給 AddaBound',
         f'/join {pairing.token}'
     )
 
@@ -26,11 +25,11 @@ def join_pairing(event, room):
         room.rooms.add(pair_with)
         print(room.rooms.all())
         pairing.delete()
-        reply_text(event, f'Success connected with {pair_with.name}.')
-        push_message(pair_with, f'Success connected with {room.name}.')
+        reply_text(event, f'成功與 {pair_with.name} 建立連線')
+        push_message(pair_with, f'成功與 {room.name} 建立連線')
 
     except ValueError:
-        reply_text(event, 'Cannot identify token from you command.')
+        reply_text(event, '無法從訊息中找到配對碼')
 
     except Pairing.DoesNotExist:
-        reply_text(event, 'Pairing not found.')
+        reply_text(event, '找不到配對')
