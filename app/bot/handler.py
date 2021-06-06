@@ -1,11 +1,10 @@
 from django.conf import settings
 
 from linebot import WebhookHandler
-from linebot.models.events import (
-    MessageEvent, FollowEvent, JoinEvent, PostbackEvent)
+from linebot.models.events import (MessageEvent, FollowEvent, JoinEvent)
 from linebot.models.messages import TextMessage
 
-from .send import send
+from .send import Sender
 from .message_queue import MessageQueue
 from .pairing import create_pairing, join_pairing
 from .manage import manage
@@ -25,7 +24,7 @@ def handle(event):
         return join_pairing(event)
 
     if msg.startswith('/send'):
-        return send(event)
+        return Sender(event).handle()
 
     if msg.startswith('/manage'):
         return manage(event)

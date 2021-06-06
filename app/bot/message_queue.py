@@ -2,7 +2,6 @@ import queue
 from threading import RLock
 
 from .utils import get_or_create_room
-from .line import reply_text
 
 
 class MessageQueue:
