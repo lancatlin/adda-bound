@@ -10,9 +10,6 @@ from .line import reply_text, push_message, line_bot_api
 from .message_queue import MessageQueue
 
 
-message_queue = MessageQueue()
-
-
 @with_room
 def send(event, room):
     msg = event.message.text
@@ -22,7 +19,7 @@ def send(event, room):
         confirm(event, f'Send {recipient.name} "{message}" ?')
 
         print('request')
-        res = message_queue.request(room)
+        res = MessageQueue.request(room)
         print(res)
         if res.message.text == 'Yes':
             push_message(recipient, f'From {room.name}: {message}')

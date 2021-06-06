@@ -5,7 +5,8 @@ from linebot.models.events import (
     MessageEvent, FollowEvent, JoinEvent, PostbackEvent)
 from linebot.models.messages import TextMessage
 
-from .send import send, message_queue
+from .send import send
+from .message_queue import MessageQueue
 from .pairing import create_pairing, join_pairing
 from .manage import manage
 from .line import reply_text
@@ -32,7 +33,7 @@ def handle(event):
     if msg.startswith('/delete'):
         return reply_text(event, 'delete my information')
 
-    message_queue.handle(event)
+    MessageQueue.handle(event)
 
 
 @with_room
