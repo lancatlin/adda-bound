@@ -32,33 +32,33 @@ class LineBotTest(TestCase):
         self.room3 = sample_room(name='CyberSpace', id='74747474')
         self.room1.rooms.add(self.room2, self.room3)
 
-    @patch('bot.send.confirm')
-    @patch('bot.send.push_message')
-    @patch('bot.send.reply_text')
-    def test_send_success(self, mock_reply, mock_push, mock_confirm):
-        msg = 'This is my message'
+    # @patch('bot.send.confirm')
+    # @patch('bot.send.push_message')
+    # @patch('bot.send.reply_text')
+    # def test_send_success(self, mock_reply, mock_push, mock_confirm):
+    #     msg = 'This is my message'
 
-        def func():
-            time.sleep(0.1)
-            event = sample_event(self.room1, 'Yes')
-            handle(event)
+    #     def func():
+    #         time.sleep(0.1)
+    #         event = sample_event(self.room1, 'Yes')
+    #         handle(event)
 
-        thread = Thread(target=func)
-        thread.start()
+    #     thread = Thread(target=func)
+    #     thread.start()
 
-        event = sample_event(self.room1, f'/send {self.room2.name} {msg}')
-        handle(event)
+    #     event = sample_event(self.room1, f'/send {self.room2.name} {msg}')
+    #     handle(event)
 
-        mock_confirm.assert_called_once_with(
-            event, f'Send {self.room2.name} "{msg}" ?')
-        mock_reply.assert_called_once_with(
-            event, 'Sent',
-        )
-        mock_push.assert_called_once_with(
-            self.room2, msg,
-        )
+    #     mock_confirm.assert_called_once_with(
+    #         event, f'Send {self.room2.name} "{msg}" ?')
+    #     mock_reply.assert_called_once_with(
+    #         event, 'Sent',
+    #     )
+    #     mock_push.assert_called_once_with(
+    #         self.room2, msg,
+    #     )
 
-        thread.join()
+    #     thread.join()
 
     # @patch('bot.send.reply_text')
     # def test_send_not_found_recipient(self, mock_reply):
