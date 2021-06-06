@@ -20,7 +20,7 @@ class QueueTest(TestCase):
 
         def req():
             res = self.queue.request(self.room)
-            self.assertEqual(res, msg)
+            self.assertEqual(res.message.text, msg)
 
         thread = Thread(target=req)
         thread.start()

@@ -5,7 +5,7 @@ from linebot.models.events import (
     MessageEvent, FollowEvent, JoinEvent, PostbackEvent)
 from linebot.models.messages import TextMessage
 
-from .send import send, confirm_message, del_message
+from .send import send, message_queue
 from .pairing import create_pairing, join_pairing
 from .manage import manage
 from .line import reply_text
@@ -32,15 +32,7 @@ def handle(event):
     if msg.startswith('/delete'):
         return reply_text(event, 'delete my information')
 
-
-@handler.add(PostbackEvent)
-def postback_handler(event, *args):
-    msg = event.postback.data
-    if msg.startswith('/confirm'):
-        return confirm_message(event)
-
-    if msg.startswith('/del'):
-        del_message(event)
+    message_queue.handle(event)
 
 
 @with_room

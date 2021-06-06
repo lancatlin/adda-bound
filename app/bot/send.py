@@ -1,7 +1,5 @@
-import uuid
-
 from linebot.models.template import ConfirmTemplate, TemplateSendMessage
-from linebot.models.actions import PostbackAction
+from linebot.models.actions import MessageAction
 
 from core.models import Room
 
@@ -19,7 +17,13 @@ def send(event, room):
     try:
         recipient_name, message = parse_message(msg)
         recipient = room.rooms.get(name__icontains=recipient_name)
-        confirm(event, recipient, message)
+        confirm(event, f'Send {recipient.name} "{message}" ?')
+
+        res = message_queue.request(room)
+        print(res)
+        if res.message.text == 'Yes':
+            push_message(recipient, message)
+            reply_text(res, 'Sent')
     except ValueError:
         reply_text(event, 'Cannot parse the message')
     except Room.DoesNotExist:
@@ -31,51 +35,8 @@ def send(event, room):
 
 
 @with_room
-def confirm_message(event, room):
-    msg = event.postback.data
-    try:
-        msg_id = msg.split(' ')[1]
-        if not message_queue.contain(msg_id):
-            raise Exception('Message not found')
-
-        msg = message_queue.get(msg_id)
-        sender = msg['sender']
-        recipient = msg['recipient']
-        message = msg['message']
-        push_message(
-            recipient,
-            f'from {sender.name}: {message}'
-        )
-        reply_text(event, 'Sent')
-        message_queue.delete(msg_id)
-
-    except Exception as e:
-        reply_text(event, str(e))
-
-
-@with_room
-def del_message(event, room):
-    msg = event.postback.data
-    try:
-        msg_id = msg.split(' ')[1]
-        if msg_id in message_queue:
-            message_queue.delete(msg_id)
-            reply_text(event, 'Canceled')
-        else:
-            reply_text(event, 'Message not exists or already canceled')
-    except Exception as e:
-        reply_text(event, str(e))
-
-
-@with_room
 def confirm(event, room, recipient, message):
     '''Ask user to comfirm the message being sent'''
-    msg_id = str(uuid.uuid4())
-    message_queue.set(msg_id, {
-        'sender': room,
-        'recipient': recipient,
-        'message': message,
-    })
     line_bot_api.reply_message(
         event.reply_token,
         TemplateSendMessage(
@@ -83,15 +44,13 @@ def confirm(event, room, recipient, message):
             template=ConfirmTemplate(
                 text=f'Send {recipient.name} "{message}" ?',
                 actions=[
-                    PostbackAction(
+                    MessageAction(
                         label='Yes',
-                        data=f'/confirm {msg_id}',
-                        display_text='Yes'
+                        text='yes'
                     ),
-                    PostbackAction(
+                    MessageAction(
                         label='No',
-                        data=f'/del {msg_id}',
-                        display_text='No'
+                        text='no'
                     )
                 ]
             )
