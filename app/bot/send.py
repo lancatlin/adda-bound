@@ -1,7 +1,5 @@
 import uuid
 
-from threading import Lock
-
 from linebot.models.template import ConfirmTemplate, TemplateSendMessage
 from linebot.models.actions import PostbackAction
 
@@ -9,37 +7,7 @@ from core.models import Room
 
 from .utils import parse_message, with_room
 from .line import reply_text, push_message, line_bot_api
-
-
-class MessageQueue:
-    def __init__(self):
-        self.__queue = {}
-        self.__lock = Lock()
-
-    def with_lock(callback):
-        def func(self, *arg, **kwargs):
-            try:
-                self.__lock.acquire(blocking=True, timeout=5)
-                return callback(self, *arg, **kwargs)
-            finally:
-                self.__lock.release()
-        return func
-
-    @with_lock
-    def set(self, key, value):
-        self.__queue[key] = value
-
-    @with_lock
-    def get(self, key):
-        return self.__queue[key]
-
-    @with_lock
-    def delete(self, key):
-        del self.__queue[key]
-
-    @with_lock
-    def contain(self, key):
-        return key in self.__queue
+from .queue import MessageQueue
 
 
 message_queue = MessageQueue()

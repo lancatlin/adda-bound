@@ -15,6 +15,12 @@ def room_source(room):
     return SourceUser(user_id=room.room_id)
 
 
+def sample_event(room, msg):
+    '''Return a sample text message event'''
+    return MessageEvent(source=room_source(
+        room), message=TextMessage(text=msg))
+
+
 class LineBotTest(TestCase):
     def setUp(self):
         self.room1 = sample_room(name='Cambridge', room_id='123456')
@@ -42,8 +48,7 @@ class LineBotTest(TestCase):
     @patch('bot.send.confirm')
     def test_send_success(self, mock_confirm):
         msg = f'/send {self.room2.name} This is my message'
-        event = MessageEvent(source=room_source(
-            self.room1), message=TextMessage(text=msg))
+        event = sample_event(self.room1, msg)
         send(event)
         mock_confirm.assert_called_once_with(
             event, self.room2, 'This is my message')
@@ -51,8 +56,7 @@ class LineBotTest(TestCase):
     @patch('bot.send.reply_text')
     def test_send_not_found_recipient(self, mock_reply):
         msg = '/send Derek This is my message'
-        event = MessageEvent(source=room_source(
-            self.room1), message=TextMessage(text=msg))
+        event = sample_event(self.room1, msg)
         send(event)
         mock_reply.assert_called_once_with(
             event, 'Recipient not found'
@@ -62,8 +66,7 @@ class LineBotTest(TestCase):
     def test_send_found_multiple_recipients(self, mock_reply):
         '''Test found multiple recipients and should failed'''
         msg = '/send Cyber This is my message'
-        event = MessageEvent(source=room_source(
-            self.room1), message=TextMessage(text=msg))
+        event = sample_event(self.room1, msg)
         send(event)
         mock_reply.assert_called_once_with(
             event, 'Found multiple recipients: CyberPunk, CyberSpace'
