@@ -1,9 +1,10 @@
 from django.test import TestCase
+from unittest.mock import patch
 
 from threading import Thread
-import time
+from queue import Empty
 
-from bot.queue import MessageQueue
+from bot.message_queue import MessageQueue
 from core.tests.test_models import sample_room
 from bot.tests.test_line import sample_event
 
@@ -32,8 +33,12 @@ class QueueTest(TestCase):
         self.queue.handle(sample_event(self.room, msg))
         self.assertTrue(self.queue._responses[self.room.id].empty())
 
-    def test_request_message(self):
-        '''Test request some message and get one'''
-
-    def test_request_message_timeout(self):
+    @patch('queue.time')
+    def test_request_message_timeout(self, mock_time):
         '''Test request some message but timeout'''
+        mock_time.side_effect = [0, 180]
+        self.assertRaises(
+            Empty,
+            lambda: self.queue.request(self.room),
+        )
+        self.assertEqual(mock_time.call_count, 2)

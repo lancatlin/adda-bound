@@ -7,7 +7,7 @@ from core.models import Room
 
 from .utils import parse_message, with_room
 from .line import reply_text, push_message, line_bot_api
-from .queue import MessageQueue
+from .message_queue import MessageQueue
 
 
 message_queue = MessageQueue()
