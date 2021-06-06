@@ -27,38 +27,41 @@ def sample_event(room, msg):
 
 class LineBotTest(TestCase):
     def setUp(self):
-        self.room1 = sample_room(name='Cambridge', room_id='123456')
+        self.room1 = sample_room(name='Cambridge', room_id='cambridge')
+        self.room1.save()
         self.room2 = sample_room(name='CyberPunk', room_id='345678')
-        self.room3 = sample_room(name='CyberSpace', id='74747474')
+        self.room2.save()
+        self.room3 = sample_room(name='CyberSpace', room_id='74747474')
+        self.room3.save()
         self.room1.rooms.add(self.room2, self.room3)
 
-    # @patch('bot.send.confirm')
-    # @patch('bot.send.push_message')
-    # @patch('bot.send.reply_text')
-    # def test_send_success(self, mock_reply, mock_push, mock_confirm):
-    #     msg = 'This is my message'
+    @patch('bot.send.confirm')
+    @patch('bot.send.push_message')
+    @patch('bot.send.reply_text')
+    def test_send_success(self, mock_reply, mock_push, mock_confirm):
+        msg = 'This is my message'
+        print(self.room1.__dict__)
 
-    #     def func():
-    #         time.sleep(0.1)
-    #         event = sample_event(self.room1, 'Yes')
-    #         handle(event)
+        def func():
+            event = sample_event(self.room1, f'/send {self.room2.name} {msg}')
+            handle(event)
 
-    #     thread = Thread(target=func)
-    #     thread.start()
+        thread = Thread(target=func)
+        thread.start()
+        time.sleep(1)
+        event = sample_event(self.room1, 'Yes')
+        handle(event)
 
-    #     event = sample_event(self.room1, f'/send {self.room2.name} {msg}')
-    #     handle(event)
+        mock_confirm.assert_called_once_with(
+            event, f'Send {self.room2.name} "{msg}" ?')
+        mock_reply.assert_called_once_with(
+            event, 'Sent',
+        )
+        mock_push.assert_called_once_with(
+            self.room2, msg,
+        )
 
-    #     mock_confirm.assert_called_once_with(
-    #         event, f'Send {self.room2.name} "{msg}" ?')
-    #     mock_reply.assert_called_once_with(
-    #         event, 'Sent',
-    #     )
-    #     mock_push.assert_called_once_with(
-    #         self.room2, msg,
-    #     )
-
-    #     thread.join()
+        thread.join()
 
     # @patch('bot.send.reply_text')
     # def test_send_not_found_recipient(self, mock_reply):

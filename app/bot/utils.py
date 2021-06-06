@@ -17,7 +17,7 @@ def parse_message(msg):
     return pieces[1], ' '.join(pieces[2:])
 
 
-def get_room(event):
+def get_or_create_room(event):
     src = event.source
     if src.type == 'user':
         room_id = src.user_id
@@ -29,16 +29,25 @@ def get_room(event):
         room_type = Room.RoomType.GROUP
         name = get_group_name(src.group_id)
 
+    # room = Room.objects.get(
+    #     room_id=room_id,
+    #     room_type=room_type,
+    #     service=Room.Service.LINE,
+    # )
     room, created = Room.objects.get_or_create(
         room_id=room_id,
-        room_type=room_type,
-        service=Room.Service.LINE,
-        defaults={'name': name},
+        defaults={
+            'name': name,
+            'room_type': room_type,
+            'service': Room.Service.LINE,
+        },
     )
+    if created:
+        print('created', room.__dict__)
     return room
 
 
 def with_room(callback):
     def func(event, *args):
-        return callback(event, get_room(event), *args)
+        return callback(event, get_or_create_room(event), *args)
     return func

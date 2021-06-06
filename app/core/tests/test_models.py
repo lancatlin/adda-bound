@@ -5,11 +5,11 @@ from core.models import Room
 def sample_room(**kwargs):
     payload = {
         'room_id': '1234567',
-        'room_type': 'U',
-        'service': 'LN',
+        'room_type': Room.RoomType.USER,
+        'service': Room.Service.LINE,
         'name': 'test',
     }
-    payload.update(kwargs)
+    payload.update(**kwargs)
     return Room.objects.create(**payload)
 
 

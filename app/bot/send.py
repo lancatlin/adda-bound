@@ -19,11 +19,14 @@ def send(event, room):
         recipient = room.rooms.get(name__icontains=recipient_name)
         confirm(event, f'Send {recipient.name} "{message}" ?')
 
+        print('request')
         res = message_queue.request(room)
         print(res)
         if res.message.text == 'Yes':
             push_message(recipient, message)
             reply_text(res, 'Sent')
+        else:
+            reply_text(res, 'Cancel')
     except ValueError:
         reply_text(event, 'Cannot parse the message')
     except Room.DoesNotExist:
@@ -35,22 +38,22 @@ def send(event, room):
 
 
 @with_room
-def confirm(event, room, recipient, message):
+def confirm(event, room, message):
     '''Ask user to comfirm the message being sent'''
     line_bot_api.reply_message(
         event.reply_token,
         TemplateSendMessage(
             alt_text='Confirm',
             template=ConfirmTemplate(
-                text=f'Send {recipient.name} "{message}" ?',
+                text=message,
                 actions=[
                     MessageAction(
                         label='Yes',
-                        text='yes'
+                        text='Yes'
                     ),
                     MessageAction(
                         label='No',
-                        text='no'
+                        text='No'
                     )
                 ]
             )

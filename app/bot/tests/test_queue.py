@@ -11,7 +11,7 @@ from bot.tests.test_line import sample_event
 
 class QueueTest(TestCase):
     def setUp(self):
-        self.room = sample_room(name='TestRoom', id='12345656')
+        self.room = sample_room(name='TestRoom', room_id='12345656')
         self.queue = MessageQueue()
 
     def test_put_message(self):
