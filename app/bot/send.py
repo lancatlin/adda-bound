@@ -1,6 +1,8 @@
 from linebot.models.template import ConfirmTemplate, TemplateSendMessage
 from linebot.models.actions import MessageAction
 
+import queue
+
 from core.models import Room
 
 from .utils import parse_message, with_room
@@ -23,7 +25,7 @@ def send(event, room):
         res = message_queue.request(room)
         print(res)
         if res.message.text == 'Yes':
-            push_message(recipient, message)
+            push_message(recipient, f'From {room.name}: {message}')
             reply_text(res, 'Sent')
         else:
             reply_text(res, 'Cancel')
@@ -35,6 +37,9 @@ def send(event, room):
         rooms = Room.objects.filter(name__icontains=recipient_name).all()
         rooms_name = ', '.join([room.name for room in rooms])
         reply_text(event, f'Found multiple recipients: {rooms_name}')
+    except queue.Empty:
+        '''Timeout'''
+        push_message(room, 'Timeout, cancel')
 
 
 @with_room

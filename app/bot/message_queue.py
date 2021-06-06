@@ -12,15 +12,12 @@ class MessageQueue:
         self._responses = {}
 
     def create_if_not_exists(self, room):
-        print('room', room.id)
         with self._lock:
             if room.id not in self._requests:
                 self._requests[room.id] = queue.Queue(maxsize=1)
 
             if room.id not in self._responses:
                 self._responses[room.id] = queue.Queue(maxsize=1)
-        print('requests:', self._requests)
-        print('responses:', self._responses)
 
     def handle(self, event):
         room = get_or_create_room(event)
@@ -31,7 +28,7 @@ class MessageQueue:
                 self._responses[room.id].put(event, timeout=1)
         except queue.Empty:
             '''No request, ignore the message'''
-            reply_text(event, event.message.text)
+            pass
 
     def request(self, room):
         self.create_if_not_exists(room)
