@@ -1,4 +1,4 @@
-from linebot.models.template import ConfirmTemplate, TemplateSendMessage
+from linebot.models.template import ConfirmTemplate, TemplateSendMessage, ButtonsTemplate
 from linebot.models.actions import MessageAction
 
 import queue
@@ -8,6 +8,10 @@ from core.models import Room
 from .utils import parse_message, get_or_create_room
 from .line import reply_text, push_message, line_bot_api
 from .message_queue import MessageQueue
+
+
+class NoRecipientError(Exception):
+    pass
 
 
 class Sender:
@@ -44,6 +48,9 @@ class Sender:
             '''Timeout'''
             push_message(self.room, '操作逾時，取消操作')
 
+        except NoRecipientError:
+            self.reply('沒有已配對的聊天室')
+
     def send(self):
         self.recipient_name, self.content = parse_message(self.request)
         self.recipient = self.room.rooms.get(
@@ -56,8 +63,7 @@ class Sender:
         return self.event.message.text
 
     def send_conversation(self):
-
-        self.recipient_name = self.ask('收件者名稱？')
+        self.recipient_name = self.recipient_list()
         print(self.recipient_name)
         self.recipient = self.room.rooms.get(
             name__icontains=self.recipient_name)
@@ -66,6 +72,30 @@ class Sender:
             f'收件人：{self.recipient.name}', '請輸入訊息內容')
 
         self.confirm()
+
+    def recipient_list(self):
+        actions = [
+            MessageAction(
+                label=room.name,
+                text=room.name,
+            )
+            for room in self.room.rooms.all()
+        ]
+        print(actions)
+        if not actions:
+            raise NoRecipientError
+
+        line_bot_api.reply_message(
+            self.event.reply_token,
+            TemplateSendMessage(
+                alt_text='Recipients',
+                template=ButtonsTemplate(
+                    text='請選取收件者：',
+                    actions=actions)
+            )
+        )
+        self.event = MessageQueue.request(self.room)
+        return self.event.message.text
 
     def confirm(self):
         '''Ask user to comfirm the message being sent'''
