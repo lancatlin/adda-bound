@@ -63,17 +63,14 @@ class Sender:
         return self.event.message.text
 
     def send_conversation(self):
-        self.recipient_name = self.recipient_list()
-        print(self.recipient_name)
-        self.recipient = self.room.rooms.get(
-            name__icontains=self.recipient_name)
+        self.get_recipient()
 
         self.content = self.ask(
             f'收件人：{self.recipient.name}', '請輸入訊息內容')
 
         self.confirm()
 
-    def recipient_list(self):
+    def get_recipient(self):
         actions = [
             MessageAction(
                 label=room.name,
@@ -85,6 +82,10 @@ class Sender:
         if not actions:
             raise NoRecipientError
 
+        if len(actions) == 1:
+            self.recipient = self.room.rooms.get()
+            return
+
         line_bot_api.reply_message(
             self.event.reply_token,
             TemplateSendMessage(
@@ -94,8 +95,10 @@ class Sender:
                     actions=actions)
             )
         )
+
         self.event = MessageQueue.request(self.room)
-        return self.event.message.text
+        self.recipient = self.room.rooms.get(
+            name__icontains=self.event.message.text)
 
     def confirm(self):
         '''Ask user to comfirm the message being sent'''
