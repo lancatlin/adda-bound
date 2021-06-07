@@ -44,6 +44,9 @@ def handle(event):
     if msg.startswith('/manage'):
         return Manager(event).handle()
 
+    if msg.startswith('/help'):
+        return usage(event)
+
     if msg.startswith('/delete'):
         return reply_text(event, 'delete my information')
 
@@ -73,3 +76,9 @@ def join_group(event):
 @handler.add(PostbackEvent)
 def del_room(event):
     PairingRemover(event).handle()
+
+
+def usage(event):
+    with open('usage.md', 'r') as f:
+        msg = f.read()
+        reply_text(event, msg)
