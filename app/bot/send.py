@@ -46,6 +46,7 @@ class Sender(BaseHandler):
 
         except queue.Empty:
             '''Timeout'''
+            MessageQueue.clear(self.room)
             push_message(self.room, '操作逾時，取消操作')
 
         except OtherCommandExecuting:
@@ -72,16 +73,13 @@ class Sender(BaseHandler):
             name__icontains=self.recipient_name)
         self.send()
 
-    def ask(self, *question):
-        self.reply(*question)
-        self.event = MessageQueue.request(self.room)
-        return self.event.message.text
-
     def send_conversation(self):
         self.get_recipient()
 
-        self.content = self.ask(
-            f'收件人：{self.recipient.name}', '請輸入訊息內容')
+        self.reply(f'收件人：{self.recipient.name}', '請輸入訊息內容')
+
+        self.event = MessageQueue.request(self.room, timeout=300)
+        self.content = self.request()
 
         self.send()
 

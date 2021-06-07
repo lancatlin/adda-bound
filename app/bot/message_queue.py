@@ -32,13 +32,21 @@ class MessageQueue:
             pass
 
     @classmethod
-    def request(cls, room):
+    def request(cls, room, timeout=30):
         cls.create_if_not_exists(room)
 
         cls._requests[room.id].put_nowait(True)
-        return cls._responses[room.id].get(timeout=60)
+        return cls._responses[room.id].get(timeout=timeout)
 
     @classmethod
     def available(cls, room):
         cls.create_if_not_exists(room)
         return cls._requests[room.id].empty()
+
+    @classmethod
+    def clear(cls, room):
+        cls.create_if_not_exists(room)
+        try:
+            cls._requests[room.id].get_nowait()
+        except queue.Empty:
+            pass
