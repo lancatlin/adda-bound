@@ -1,55 +1,31 @@
-from django.conf import settings
-
-from linebot import WebhookHandler
-from linebot.models.events import (MessageEvent, FollowEvent, JoinEvent)
-from linebot.models.messages import TextMessage
-
-from .send import Sender
 from .message_queue import MessageQueue
-from .pairing import create_pairing, join_pairing
-from .manage import manage
+from .utils import get_user_name, get_or_create_room
 from .line import reply_text
-from .utils import with_room
-
-handler = WebhookHandler(settings.LINE_SECRET)
+from core.models import Room
 
 
-@handler.add(MessageEvent, message=TextMessage)
-def handle(event):
-    msg = event.message.text
-    if msg.startswith('/create'):
-        return create_pairing(event)
+class BaseHandler:
+    def __init__(self, event):
+        self.event = event
+        self.room = get_or_create_room(event)
 
-    if msg.startswith('/join'):
-        return join_pairing(event)
+    def request(self):
+        return self.event.message.text.strip()
 
-    if msg.startswith('/send'):
-        return Sender(event).handle()
+    def reply(self, *msg):
+        reply_text(self.event, *msg)
 
-    if msg.startswith('/manage'):
-        return manage(event)
+    def sender_name(self):
+        if self.room.room_type == Room.RoomType.GROUP:
+            user_id = self.event.source.user_id
+            user_name = get_user_name(user_id)
+            return f'{user_name}在{self.room.name}'
+        return self.room.name
 
-    if msg.startswith('/delete'):
-        return reply_text(event, 'delete my information')
+    def handle(self):
+        pass
 
-    MessageQueue.handle(event)
-
-
-@with_room
-def greeting(event, room):
-    '''Greeting when join
-    created is whether has created a new room
-    '''
-    reply_text(event, f'哈囉 {room.name}！謝謝你使用 AddaBound')
-
-
-@handler.add(FollowEvent)
-def join_user(event):
-    '''A user add the bot'''
-    greeting(event)
-
-
-@handler.add(JoinEvent)
-def join_group(event, room):
-    '''Join a group'''
-    greeting(event)
+    def ask(self, *question):
+        self.reply(*question)
+        self.event = MessageQueue.request(self.room)
+        return self.event.message.text

@@ -1,37 +1,22 @@
-from linebot.models.template import ConfirmTemplate, TemplateSendMessage, ButtonsTemplate
+from linebot.models.template import (
+    ConfirmTemplate, TemplateSendMessage, ButtonsTemplate)
 from linebot.models.actions import MessageAction
 
 import queue
 
 from core.models import Room
 
-from .utils import parse_message, get_or_create_room, get_user_name
-from .line import reply_text, push_message, line_bot_api
+from .utils import parse_message
+from .line import push_message, line_bot_api
 from .message_queue import MessageQueue
+from .handler import BaseHandler
 
 
 class NoRecipientError(Exception):
     pass
 
 
-class Sender:
-    def __init__(self, event):
-        self.event = event
-        self.room = get_or_create_room(event)
-
-    def request(self):
-        return self.event.message.text.strip()
-
-    def reply(self, *msg):
-        reply_text(self.event, *msg)
-
-    def sender_name(self):
-        if self.room.room_type == Room.RoomType.GROUP:
-            user_id = self.event.source.user_id
-            user_name = get_user_name(user_id)
-            return f'{user_name}在{self.room.name}'
-        return self.room.name
-
+class Sender(BaseHandler):
     def handle(self):
         try:
             if self.request() == '/send':
@@ -56,6 +41,10 @@ class Sender:
         except queue.Empty:
             '''Timeout'''
             push_message(self.room, '操作逾時，取消操作')
+
+        except queue.Full:
+            '''There are other commands are processing'''
+            self.reply('請先完成先前的操作')
 
         except NoRecipientError:
             self.reply('沒有已配對的聊天室')
