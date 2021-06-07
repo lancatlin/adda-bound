@@ -9,7 +9,7 @@ from linebot.models.messages import TextMessage
 from .send import Sender
 from .message_queue import MessageQueue
 from .pairing import create_pairing, join_pairing
-from .manage import manage
+from .manage import Manager
 from .line import reply_text
 from .utils import with_room
 
@@ -40,7 +40,7 @@ def handle(event):
         return Sender(event).handle()
 
     if msg.startswith('/manage'):
-        return manage(event)
+        return Manager(event).handle()
 
     if msg.startswith('/delete'):
         return reply_text(event, 'delete my information')
