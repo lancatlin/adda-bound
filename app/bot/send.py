@@ -16,9 +16,15 @@ class NoRecipientError(Exception):
     pass
 
 
+class OtherCommandExecuting(Exception):
+    pass
+
+
 class Sender(BaseHandler):
     def handle(self):
         try:
+            if not MessageQueue.available(self.room):
+                raise OtherCommandExecuting()
             if self.request() == '/send':
                 self.send_conversation()
             else:
@@ -42,7 +48,7 @@ class Sender(BaseHandler):
             '''Timeout'''
             push_message(self.room, '操作逾時，取消操作')
 
-        except queue.Full:
+        except OtherCommandExecuting:
             '''There are other commands are processing'''
             self.reply('請先完成先前的操作')
 
@@ -97,13 +103,14 @@ class Sender(BaseHandler):
 
         line_bot_api.reply_message(
             self.event.reply_token,
-            TemplateSendMessage(
+            messages=TemplateSendMessage(
                 alt_text='Recipients',
                 template=ButtonsTemplate(
                     text='請選取收件者：',
                     actions=actions,
                 ),
             ),
+            notification_disabled=True,
         )
         self.event = MessageQueue.request(self.room)
         self.recipient = self.room.rooms.get(
@@ -128,7 +135,8 @@ class Sender(BaseHandler):
                         )
                     ]
                 )
-            )
+            ),
+            notification_disabled=True,
         )
         self.event = MessageQueue.request(self.room)
         return self.request().lower() == 'yes'

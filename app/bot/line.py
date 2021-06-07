@@ -8,7 +8,8 @@ line_bot_api = LineBotApi(settings.LINE_TOKEN)
 def reply_text(event, *messages):
     line_bot_api.reply_message(
         event.reply_token,
-        [TextSendMessage(text=message) for message in messages],
+        messages=[TextSendMessage(text=message) for message in messages],
+        notification_disabled=True,
     )
 
 

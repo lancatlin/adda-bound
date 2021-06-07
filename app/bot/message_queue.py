@@ -24,8 +24,9 @@ class MessageQueue:
         cls.create_if_not_exists(room)
 
         try:
-            if cls._requests[room.id].get_nowait():
+            if not cls._requests[room.id].empty():
                 cls._responses[room.id].put(event, timeout=1)
+                cls._requests[room.id].get()
         except queue.Empty:
             '''No request, ignore the message'''
             pass
@@ -36,3 +37,8 @@ class MessageQueue:
 
         cls._requests[room.id].put_nowait(True)
         return cls._responses[room.id].get(timeout=60)
+
+    @classmethod
+    def available(cls, room):
+        cls.create_if_not_exists(room)
+        return cls._requests[room.id].empty()
