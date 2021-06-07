@@ -1,9 +1,12 @@
 from linebot.models.template import TemplateSendMessage, ButtonsTemplate
 from linebot.models.actions import PostbackAction
 
+from core.models import Room
+
 from .handler import BaseHandler
 from .message_queue import MessageQueue
-from .line import line_bot_api
+from .line import line_bot_api, push_message
+from .utils import get_token
 
 
 class Manager(BaseHandler):
@@ -30,3 +33,21 @@ class Manager(BaseHandler):
                 )
             )
         )
+
+
+class PairingRemover(BaseHandler):
+    def request(self):
+        return self.event.postback.data
+
+    def handle(self):
+        try:
+            room_id = get_token(self.request())
+            recipient = self.room.rooms.get(id=room_id)
+            self.room.rooms.remove(recipient)
+            self.reply(f'已經解除與{recipient.name}的配對')
+            push_message(recipient, f'與{self.room.name}的配對已經被對方解除')
+        except ValueError:
+            self.reply('無法解析訊息')
+
+        except Room.DoesNotExist:
+            self.reply('找不到房間，或是房間已經被刪除了')

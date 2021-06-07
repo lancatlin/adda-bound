@@ -3,13 +3,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
 from linebot import WebhookHandler
-from linebot.models.events import (MessageEvent, FollowEvent, JoinEvent)
+from linebot.models.events import (
+    MessageEvent, FollowEvent, JoinEvent, PostbackEvent
+)
 from linebot.models.messages import TextMessage
 
 from .send import Sender
 from .message_queue import MessageQueue
 from .pairing import create_pairing, join_pairing
-from .manage import Manager
+from .manage import Manager, PairingRemover
 from .line import reply_text
 from .utils import with_room
 
@@ -63,6 +65,11 @@ def join_user(event):
 
 
 @handler.add(JoinEvent)
-def join_group(event, room):
+def join_group(event):
     '''Join a group'''
     greeting(event)
+
+
+@handler.add(PostbackEvent)
+def del_room(event):
+    PairingRemover(event).handle()
