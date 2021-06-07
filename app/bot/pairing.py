@@ -25,8 +25,8 @@ def join_pairing(event, room):
         room.rooms.add(pair_with)
         print(room.rooms.all())
         pairing.delete()
-        reply_text(event, f'成功與 {pair_with.name} 建立連線')
-        push_message(pair_with, f'成功與 {room.name} 建立連線')
+        reply_text(event, f'成功與 {pair_with.name} bound 在一起')
+        push_message(pair_with, f'成功與 {room.name} bound 在一起')
 
     except ValueError:
         reply_text(event, '無法從訊息中找到配對碼')
