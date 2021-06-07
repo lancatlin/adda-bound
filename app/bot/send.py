@@ -18,14 +18,16 @@ class Sender:
     def __init__(self, event):
         self.event = event
         self.room = get_or_create_room(event)
-        self.request = event.message.text.strip()
+
+    def request(self):
+        return self.event.message.text.strip()
 
     def reply(self, *msg):
         reply_text(self.event, *msg)
 
     def handle(self):
         try:
-            if self.request == '/send':
+            if self.request() == '/send':
                 self.send_conversation()
             else:
                 self.send()
@@ -68,7 +70,15 @@ class Sender:
         self.content = self.ask(
             f'收件人：{self.recipient.name}', '請輸入訊息內容')
 
-        self.confirm()
+        if self.confirm():
+            push_message(
+                self.recipient,
+                f'來自{self.room.name}的訊息：',
+                self.content
+            )
+            self.reply('已傳送')
+        else:
+            self.reply('取消')
 
     def get_recipient(self):
         actions = [
@@ -92,10 +102,10 @@ class Sender:
                 alt_text='Recipients',
                 template=ButtonsTemplate(
                     text='請選取收件者：',
-                    actions=actions)
-            )
+                    actions=actions,
+                ),
+            ),
         )
-
         self.event = MessageQueue.request(self.room)
         self.recipient = self.room.rooms.get(
             name__icontains=self.event.message.text)
@@ -121,13 +131,5 @@ class Sender:
                 )
             )
         )
-        res = MessageQueue.request(self.room)
-        if res.message.text == 'Yes':
-            push_message(
-                self.recipient,
-                f'來自{self.room.name}的訊息：',
-                self.content
-            )
-            reply_text(res, '已傳送')
-        else:
-            reply_text(res, '取消')
+        self.event = MessageQueue.request(self.room)
+        return self.request().lower() == 'yes'
