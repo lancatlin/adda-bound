@@ -5,7 +5,7 @@ import queue
 
 from core.models import Room
 
-from .utils import parse_message, get_or_create_room
+from .utils import parse_message, get_or_create_room, get_user_name
 from .line import reply_text, push_message, line_bot_api
 from .message_queue import MessageQueue
 
@@ -25,12 +25,19 @@ class Sender:
     def reply(self, *msg):
         reply_text(self.event, *msg)
 
+    def sender_name(self):
+        if self.room.room_type == Room.RoomType.GROUP:
+            user_id = self.event.source.user_id
+            user_name = get_user_name(user_id)
+            return f'{user_name}在{self.room.name}'
+        return self.room.name
+
     def handle(self):
         try:
             if self.request() == '/send':
                 self.send_conversation()
             else:
-                self.send()
+                self.send_by_command()
         except ValueError:
             '''Parse error'''
             self.reply('無法解析訊息')
@@ -54,10 +61,21 @@ class Sender:
             self.reply('沒有已配對的聊天室')
 
     def send(self):
-        self.recipient_name, self.content = parse_message(self.request)
+        if self.confirm():
+            push_message(
+                self.recipient,
+                f'來自{self.sender_name()}的訊息：',
+                self.content
+            )
+            self.reply('已傳送')
+        else:
+            self.reply('取消')
+
+    def send_by_command(self):
+        self.recipient_name, self.content = parse_message(self.request())
         self.recipient = self.room.rooms.get(
             name__icontains=self.recipient_name)
-        self.confirm()
+        self.send()
 
     def ask(self, *question):
         self.reply(*question)
@@ -70,15 +88,7 @@ class Sender:
         self.content = self.ask(
             f'收件人：{self.recipient.name}', '請輸入訊息內容')
 
-        if self.confirm():
-            push_message(
-                self.recipient,
-                f'來自{self.room.name}的訊息：',
-                self.content
-            )
-            self.reply('已傳送')
-        else:
-            self.reply('取消')
+        self.send()
 
     def get_recipient(self):
         actions = [
