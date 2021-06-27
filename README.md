@@ -23,3 +23,30 @@ AddaBound 是一個可連結不同聊天室的機器人，可以透過 AddaBound
 * /manage 管理配對  
 * /delete 刪除我的帳號  
 * /help 使用說明  
+
+## 安裝
+
+### Requirements
+
+請先安裝 Docker 與 docker-compose。
+
+請先註冊一個 [LINE Bot](https://developers.line.biz/)，取得 API TOKEN 及 SECRET，建立一個 .env 文件，填入以下內容
+
+```
+LINE_TOKEN=yourtoken
+LINE_SECRET=yoursecret
+```
+
+Build container
+```
+docker-compose build
+```
+
+執行
+```
+docker-compose up -d
+```
+
+開發過程可用 [Ngrok](https://ngrok.com) 來建立 webhook，將 `https://yourhostname.com/api/line` 註冊到 LINE 的 Webhook URL。
+
+接下來打開你的 LINE 找到 bot，應該就可以使用囉！
