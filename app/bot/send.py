@@ -1,7 +1,7 @@
 from linebot.models.actions import MessageAction
-from linebot.models.send_messages import QuickReply, QuickReplyButton, TextSendMessage
-
-import queue
+from linebot.models.send_messages import (
+    QuickReply, QuickReplyButton, TextSendMessage
+)
 
 from core.models import Room
 

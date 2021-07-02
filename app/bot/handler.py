@@ -1,4 +1,6 @@
-from linebot.models.send_messages import QuickReply, QuickReplyButton, TextSendMessage
+from linebot.models.send_messages import (
+    QuickReply, QuickReplyButton, TextSendMessage
+)
 from linebot.models.actions import MessageAction
 
 from .message_queue import MessageQueue
