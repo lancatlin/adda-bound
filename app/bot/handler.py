@@ -4,16 +4,23 @@ from .line import reply_text
 from core.models import Room
 
 
+class Cancel(Exception):
+    pass
+
+
 class BaseHandler:
     def __init__(self, event):
         self.event = event
         self.room = get_or_create_room(event)
 
     def request(self):
-        return self.event.message.text.strip()
+        result = self.event.message.text.strip()
+        if result == '/cancel':
+            raise Cancel
+        return result
 
-    def reply(self, *msg):
-        reply_text(self.event, *msg)
+    def reply(self, *msg, **kwargs):
+        reply_text(self.event, *msg, **kwargs)
 
     def sender_name(self):
         if self.room.room_type == Room.RoomType.GROUP:

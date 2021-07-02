@@ -5,10 +5,11 @@ from linebot .models.send_messages import TextSendMessage
 line_bot_api = LineBotApi(settings.LINE_TOKEN)
 
 
-def reply_text(event, *messages):
+def reply_text(event, *messages, **kwargs):
     line_bot_api.reply_message(
         event.reply_token,
-        messages=[TextSendMessage(text=message) for message in messages],
+        messages=[TextSendMessage(text=message, **kwargs)
+                  for message in messages],
         notification_disabled=True,
     )
 

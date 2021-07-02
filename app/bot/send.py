@@ -10,7 +10,7 @@ from core.models import Room
 from .utils import parse_message
 from .line import push_message, line_bot_api
 from .message_queue import MessageQueue
-from .handler import BaseHandler
+from .handler import BaseHandler, Cancel
 
 
 class NoRecipientError(Exception):
@@ -57,6 +57,9 @@ class Sender(BaseHandler):
         except NoRecipientError:
             self.reply('沒有已配對的聊天室')
 
+        except Cancel:
+            self.reply('取消')
+
     def send(self):
         push_message(
             self.recipient,
@@ -74,10 +77,19 @@ class Sender(BaseHandler):
     def send_conversation(self):
         self.get_recipient()
 
-        self.reply(f'收件人：{self.recipient.name}', '請輸入訊息內容')
+        self.reply(f'收件人：{self.recipient.name}', '請輸入訊息內容',
+                   quick_reply=QuickReply(
+                       items=[QuickReplyButton(
+                           action=MessageAction(
+                               label='取消',
+                               text='/cancel',
+                           )
+                       )]))
 
         self.event = MessageQueue.request(self.room, timeout=300)
         self.content = self.request()
+        if self.content == '/cancel':
+            raise Cancel
 
         self.send()
 
@@ -89,7 +101,6 @@ class Sender(BaseHandler):
             ))
             for room in self.room.rooms.all()
         ]
-        print(items)
         if not items:
             raise NoRecipientError
 
@@ -102,10 +113,15 @@ class Sender(BaseHandler):
             messages=TextSendMessage(
                 text='選取收件人：',
                 quick_reply=QuickReply(
-                    items=items,
+                    items=items + [QuickReplyButton(action=MessageAction(
+                        label='取消',
+                        text='/cancel',
+                    ))],
                 )),
             notification_disabled=True,
         )
         self.event = MessageQueue.request(self.room)
+        if self.request() == '/cancel':
+            raise Cancel
         self.recipient = self.room.rooms.get(
-            name__icontains=self.event.message.text)
+            name__icontains=self.request())
