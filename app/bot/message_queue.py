@@ -35,9 +35,11 @@ class MessageQueue:
             if not cls._requests[room.id].empty():
                 cls._responses[room.id].put(event, timeout=1)
                 cls._requests[room.id].get()
+                return True
+            return False
         except queue.Empty:
             '''No request, ignore the message'''
-            pass
+            return False
 
     @classmethod
     def request(cls, room, timeout=30):

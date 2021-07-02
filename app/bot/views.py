@@ -8,11 +8,11 @@ from linebot.models.events import (
 )
 from linebot.models.messages import TextMessage
 
-from .send import Sender
 from .message_queue import MessageQueue, OtherCommandExecuting, RequestTimout
 from .pairing import create_pairing, join_pairing
+from .send import Sender
 from .manage import Manager, PairingRemover
-from .line import reply_text, push_message
+from .line import push_message, reply_text
 from .utils import with_room, get_or_create_room
 
 handler = WebhookHandler(settings.LINE_SECRET)
@@ -30,6 +30,8 @@ def line_endpoint(request):
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle(event):
+    if MessageQueue.handle(event):
+        return
     room = get_or_create_room(event)
     try:
         msg = event.message.text
@@ -50,8 +52,6 @@ def handle(event):
 
         if msg.startswith('/delete'):
             return reply_text(event, 'delete my information')
-
-        MessageQueue.handle(event)
 
     except RequestTimout:
         '''Timeout'''

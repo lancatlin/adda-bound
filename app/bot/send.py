@@ -18,8 +18,6 @@ class NoRecipientError(Exception):
 class Sender(BaseHandler):
     def handle(self):
         try:
-            if not MessageQueue.available(self.room):
-                raise OtherCommandExecuting()
             if self.request() == '/send':
                 self.send_conversation()
             else:
