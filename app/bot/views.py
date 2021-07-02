@@ -12,8 +12,8 @@ from .send import Sender
 from .message_queue import MessageQueue
 from .pairing import create_pairing, join_pairing
 from .manage import Manager, PairingRemover
-from .line import reply_text
-from .utils import with_room
+from .line import reply_text, push_message
+from .utils import with_room, get_or_create_room
 
 handler = WebhookHandler(settings.LINE_SECRET)
 
@@ -23,7 +23,6 @@ def line_endpoint(request):
     if request.method == 'POST':
         signatrue = request.META['HTTP_X_LINE_SIGNATURE']
         body = request.body.decode('utf-8')
-        print(body)
         handler.handle(body, signatrue)
 
     return HttpResponse()
@@ -31,26 +30,31 @@ def line_endpoint(request):
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle(event):
-    msg = event.message.text
-    if msg.startswith('/create'):
-        return create_pairing(event)
+    try:
+        msg = event.message.text
+        if msg.startswith('/create'):
+            return create_pairing(event)
 
-    if msg.startswith('/join'):
-        return join_pairing(event)
+        if msg.startswith('/join'):
+            return join_pairing(event)
 
-    if msg.startswith('/send'):
-        return Sender(event).handle()
+        if msg.startswith('/send'):
+            return Sender(event).handle()
 
-    if msg.startswith('/manage'):
-        return Manager(event).handle()
+        if msg.startswith('/manage'):
+            return Manager(event).handle()
 
-    if msg.startswith('/help'):
-        return usage(event)
+        if msg.startswith('/help'):
+            return usage(event)
 
-    if msg.startswith('/delete'):
-        return reply_text(event, 'delete my information')
+        if msg.startswith('/delete'):
+            return reply_text(event, 'delete my information')
 
-    MessageQueue.handle(event)
+        MessageQueue.handle(event)
+    except Exception as e:
+        room = get_or_create_room(event)
+        push_message(room, "伺服器發生錯誤")
+        print(e)
 
 
 @with_room
