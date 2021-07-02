@@ -7,15 +7,11 @@ from core.models import Room
 
 from .utils import parse_message
 from .line import push_message, line_bot_api
-from .message_queue import MessageQueue
+from .message_queue import MessageQueue, OtherCommandExecuting
 from .handler import BaseHandler, Cancel
 
 
 class NoRecipientError(Exception):
-    pass
-
-
-class OtherCommandExecuting(Exception):
     pass
 
 
@@ -42,15 +38,6 @@ class Sender(BaseHandler):
                 name__icontains=self.recipient_name).all()
             rooms_name = '、'.join([room.name for room in rooms])
             self.reply(f'找到多位收件者：{rooms_name}，請重新操作')
-
-        except queue.Empty:
-            '''Timeout'''
-            MessageQueue.clear(self.room)
-            push_message(self.room, '操作逾時，取消操作')
-
-        except OtherCommandExecuting:
-            '''There are other commands are processing'''
-            self.reply('請先完成先前的操作')
 
         except NoRecipientError:
             self.reply('沒有已配對的聊天室')

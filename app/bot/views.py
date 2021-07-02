@@ -9,7 +9,7 @@ from linebot.models.events import (
 from linebot.models.messages import TextMessage
 
 from .send import Sender
-from .message_queue import MessageQueue
+from .message_queue import MessageQueue, OtherCommandExecuting, RequestTimout
 from .pairing import create_pairing, join_pairing
 from .manage import Manager, PairingRemover
 from .line import reply_text, push_message
@@ -30,6 +30,7 @@ def line_endpoint(request):
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle(event):
+    room = get_or_create_room(event)
     try:
         msg = event.message.text
         if msg.startswith('/create'):
@@ -51,6 +52,15 @@ def handle(event):
             return reply_text(event, 'delete my information')
 
         MessageQueue.handle(event)
+
+    except RequestTimout:
+        '''Timeout'''
+        push_message(room, '操作逾時，取消操作')
+
+    except OtherCommandExecuting:
+        '''There are other commands are processing'''
+        push_message(room, '請先完成先前的操作')
+
     except Exception as e:
         room = get_or_create_room(event)
         push_message(room, "伺服器發生錯誤")

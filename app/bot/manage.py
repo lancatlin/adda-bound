@@ -49,6 +49,7 @@ class PairingRemover(BaseHandler):
                 push_message(recipient, f'與{self.room.name}的配對已經被對方解除')
             else:
                 self.reply('取消')
+
         except ValueError:
             self.reply('無法解析訊息')
 

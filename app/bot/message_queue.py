@@ -4,6 +4,14 @@ from threading import RLock
 from .utils import get_or_create_room
 
 
+class OtherCommandExecuting(Exception):
+    pass
+
+
+class RequestTimout(Exception):
+    pass
+
+
 class MessageQueue:
     _lock = RLock()
     _requests = {}
@@ -33,10 +41,18 @@ class MessageQueue:
 
     @classmethod
     def request(cls, room, timeout=30):
-        cls.create_if_not_exists(room)
+        try:
+            cls.create_if_not_exists(room)
 
-        cls._requests[room.id].put_nowait(True)
-        return cls._responses[room.id].get(timeout=timeout)
+            cls._requests[room.id].put_nowait(True)
+            return cls._responses[room.id].get(timeout=timeout)
+
+        except queue.Full:
+            raise OtherCommandExecuting
+
+        except queue.Empty:
+            MessageQueue.clear(room)
+            raise RequestTimout
 
     @classmethod
     def available(cls, room):
