@@ -29,3 +29,28 @@ class BaseHandler:
         self.reply(*question)
         self.event = MessageQueue.request(self.room)
         return self.event.message.text
+
+    def confirm(self, msg):
+        '''Ask user to comfirm the message being sent'''
+        line_bot_api.reply_message(
+            self.event.reply_token,
+            TemplateSendMessage(
+                alt_text='Confirm',
+                template=ConfirmTemplate(
+                    text=msg,
+                    actions=[
+                        MessageAction(
+                            label='是',
+                            text='是'
+                        ),
+                        MessageAction(
+                            label='否',
+                            text='否'
+                        )
+                    ]
+                )
+            ),
+            notification_disabled=True,
+        )
+        self.event = MessageQueue.request(self.room)
+        return self.request() == '是'

@@ -1,6 +1,7 @@
 from linebot.models.template import (
     ConfirmTemplate, TemplateSendMessage, ButtonsTemplate)
 from linebot.models.actions import MessageAction
+from linebot.models.send_messages import QuickReply, QuickReplyButton, TextSendMessage
 
 import queue
 
@@ -81,56 +82,30 @@ class Sender(BaseHandler):
         self.send()
 
     def get_recipient(self):
-        actions = [
-            MessageAction(
+        items = [
+            QuickReplyButton(action=MessageAction(
                 label=room.name,
                 text=room.name,
-            )
+            ))
             for room in self.room.rooms.all()
         ]
-        if not actions:
+        print(items)
+        if not items:
             raise NoRecipientError
 
-        if len(actions) == 1:
+        if len(items) == 1:
             self.recipient = self.room.rooms.get()
             return
 
         line_bot_api.reply_message(
             self.event.reply_token,
-            messages=TemplateSendMessage(
-                alt_text='Recipients',
-                template=ButtonsTemplate(
-                    text='請選取收件者：',
-                    actions=actions,
-                ),
-            ),
+            messages=TextSendMessage(
+                text='選取收件人：',
+                quick_reply=QuickReply(
+                    items=items,
+                )),
             notification_disabled=True,
         )
         self.event = MessageQueue.request(self.room)
         self.recipient = self.room.rooms.get(
             name__icontains=self.event.message.text)
-
-    def confirm(self):
-        '''Ask user to comfirm the message being sent'''
-        line_bot_api.reply_message(
-            self.event.reply_token,
-            TemplateSendMessage(
-                alt_text='Confirm',
-                template=ConfirmTemplate(
-                    text=f'是否要發送「{self.content}」給{self.recipient.name}？',
-                    actions=[
-                        MessageAction(
-                            label='是',
-                            text='Yes'
-                        ),
-                        MessageAction(
-                            label='取消',
-                            text='No'
-                        )
-                    ]
-                )
-            ),
-            notification_disabled=True,
-        )
-        self.event = MessageQueue.request(self.room)
-        return self.request().lower() == 'yes'
