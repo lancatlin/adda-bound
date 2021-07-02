@@ -8,7 +8,7 @@ from linebot.models.events import (
 )
 from linebot.models.messages import TextMessage
 
-from .message_queue import MessageQueue, OtherCommandExecuting, RequestTimout
+from .message_queue import MessageQueue, RequestTimout
 from .pairing import create_pairing, join_pairing
 from .send import Sender
 from .manage import Manager, PairingRemover
@@ -56,10 +56,6 @@ def handle(event):
     except RequestTimout:
         '''Timeout'''
         push_message(room, '操作逾時，取消操作')
-
-    except OtherCommandExecuting:
-        '''There are other commands are processing'''
-        push_message(room, '請先完成先前的操作')
 
     except Exception as e:
         room = get_or_create_room(event)

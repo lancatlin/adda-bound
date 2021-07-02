@@ -4,10 +4,6 @@ from threading import RLock
 from .utils import get_or_create_room
 
 
-class OtherCommandExecuting(Exception):
-    pass
-
-
 class RequestTimout(Exception):
     pass
 
@@ -48,9 +44,6 @@ class MessageQueue:
 
             cls._requests[room.id].put_nowait(True)
             return cls._responses[room.id].get(timeout=timeout)
-
-        except queue.Full:
-            raise OtherCommandExecuting
 
         except queue.Empty:
             MessageQueue.clear(room)

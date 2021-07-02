@@ -7,7 +7,7 @@ from core.models import Room
 
 from .utils import parse_message
 from .line import push_message, line_bot_api
-from .message_queue import MessageQueue, OtherCommandExecuting
+from .message_queue import MessageQueue
 from .handler import BaseHandler, Cancel
 
 
