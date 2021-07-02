@@ -54,7 +54,7 @@ def handle(event):
     except Exception as e:
         room = get_or_create_room(event)
         push_message(room, "伺服器發生錯誤")
-        print(e)
+        raise e
 
 
 @with_room

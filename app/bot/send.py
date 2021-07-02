@@ -88,7 +88,6 @@ class Sender(BaseHandler):
             )
             for room in self.room.rooms.all()
         ]
-        print(actions)
         if not actions:
             raise NoRecipientError
 

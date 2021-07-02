@@ -37,8 +37,6 @@ def get_or_create_room(event):
             'service': Room.Service.LINE,
         },
     )
-    if created:
-        print('created', room.__dict__)
     return room
 
 
