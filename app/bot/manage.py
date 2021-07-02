@@ -43,9 +43,12 @@ class PairingRemover(BaseHandler):
         try:
             room_id = get_token(self.request())
             recipient = self.room.rooms.get(id=room_id)
-            self.room.rooms.remove(recipient)
-            self.reply(f'已經解除與{recipient.name}的配對')
-            push_message(recipient, f'與{self.room.name}的配對已經被對方解除')
+            if self.confirm(f'確定要移除與{recipient.name}的配對嗎？（對方會收到通知）'):
+                self.room.rooms.remove(recipient)
+                self.reply(f'已經解除與{recipient.name}的配對')
+                push_message(recipient, f'與{self.room.name}的配對已經被對方解除')
+            else:
+                self.reply('取消')
         except ValueError:
             self.reply('無法解析訊息')
 

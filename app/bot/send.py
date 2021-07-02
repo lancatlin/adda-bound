@@ -1,5 +1,3 @@
-from linebot.models.template import (
-    ConfirmTemplate, TemplateSendMessage, ButtonsTemplate)
 from linebot.models.actions import MessageAction
 from linebot.models.send_messages import QuickReply, QuickReplyButton, TextSendMessage
 

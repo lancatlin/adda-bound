@@ -1,6 +1,9 @@
+from linebot.models.send_messages import QuickReply, QuickReplyButton, TextSendMessage
+from linebot.models.actions import MessageAction
+
 from .message_queue import MessageQueue
 from .utils import get_user_name, get_or_create_room
-from .line import reply_text
+from .line import reply_text, line_bot_api
 from core.models import Room
 
 
@@ -35,29 +38,25 @@ class BaseHandler:
     def ask(self, *question):
         self.reply(*question)
         self.event = MessageQueue.request(self.room)
-        return self.event.message.text
+        return self.request()
 
     def confirm(self, msg):
         '''Ask user to comfirm the message being sent'''
         line_bot_api.reply_message(
             self.event.reply_token,
-            TemplateSendMessage(
-                alt_text='Confirm',
-                template=ConfirmTemplate(
-                    text=msg,
-                    actions=[
-                        MessageAction(
-                            label='是',
-                            text='是'
-                        ),
-                        MessageAction(
-                            label='否',
-                            text='否'
-                        )
+            TextSendMessage(
+                text=msg,
+                quick_reply=QuickReply(
+                    items=[
+                        QuickReplyButton(
+                            action=MessageAction(
+                                label=text, text=text,
+                            )
+                        ) for text in ['是', '否']
                     ]
                 )
             ),
             notification_disabled=True,
         )
         self.event = MessageQueue.request(self.room)
-        return self.request() == '是'
+        return self.event.message.text == '是'
