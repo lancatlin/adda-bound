@@ -57,15 +57,12 @@ class Sender(BaseHandler):
             self.reply('沒有已配對的聊天室')
 
     def send(self):
-        if self.confirm():
-            push_message(
-                self.recipient,
-                f'來自{self.sender_name()}的訊息：',
-                self.content
-            )
-            self.reply('已傳送')
-        else:
-            self.reply('取消')
+        push_message(
+            self.recipient,
+            f'來自{self.sender_name()}的訊息：',
+            self.content
+        )
+        self.reply('已傳送')
 
     def send_by_command(self):
         self.recipient_name, self.content = parse_message(self.request())
